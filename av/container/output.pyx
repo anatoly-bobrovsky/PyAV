@@ -22,9 +22,12 @@ cdef close_output(OutputContainer self):
         # We must only ever call av_write_trailer *once*, otherwise we get a
         # segmentation fault. Therefore no matter whether it succeeds or not
         # we must absolutely set self._done.
-        if self.file is None and not (self.ptr.oformat.flags & lib.AVFMT_NOFILE):
-            lib.avio_closep(&self.ptr.pb)
-        self._done = True
+        try:
+            self.err_check(lib.av_write_trailer(self.ptr))
+        finally:
+            if self.file is None and not (self.ptr.oformat.flags & lib.AVFMT_NOFILE):
+                lib.avio_closep(&self.ptr.pb)
+            self._done = True
 
 
 cdef class OutputContainer(Container):
